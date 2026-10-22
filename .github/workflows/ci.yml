@@ -75,6 +75,9 @@ jobs:
             # provides arm64 hosted runners (public repos or paid plans).
             runner: ubuntu-26.04-arm
 
+    env:
+      DIGEST_DIR: ${{ github.workspace }}/digests
+
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -120,20 +123,25 @@ jobs:
 
       - name: Export digest
         if: github.event_name != 'pull_request'
-        run: |
-          mkdir -p /tmp/digests
-          touch "/tmp/digests/${DIGEST#sha256:}"
         env:
           DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          if [ -z "$DIGEST" ]; then
+            echo "::error::Build produced no digest to merge"
+            exit 1
+          fi
+          mkdir -p "$DIGEST_DIR"
+          touch "$DIGEST_DIR/${DIGEST#sha256:}"
+          echo "Digest for ${{ matrix.arch }}: $DIGEST"
 
       - name: Upload digest
         if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v7
         with:
           name: digest-${{ matrix.arch }}
-          path: /tmp/digests/*
+          path: ${{ env.DIGEST_DIR }}/*
           if-no-files-found: error
-          retention-days: 1
+          retention-days: 3
 
   merge:
     name: Publish multi-arch manifest
@@ -142,11 +150,14 @@ jobs:
     runs-on: ubuntu-26.04
     timeout-minutes: 10
 
+    env:
+      DIGEST_DIR: ${{ github.workspace }}/digests
+
     steps:
       - name: Download digests
         uses: actions/download-artifact@v7
         with:
-          path: /tmp/digests
+          path: ${{ env.DIGEST_DIR }}
           pattern: digest-*
           merge-multiple: true
 
@@ -173,10 +184,27 @@ jobs:
             type=raw,value=latest,enable={{is_default_branch}}
 
       - name: Create manifest list and push
-        working-directory: /tmp/digests
+        env:
+          METADATA: ${{ steps.meta.outputs.json }}
         run: |
-          docker buildx imagetools create $(jq -c '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
-            $(printf '${{ env.IMAGE_NAME }}@sha256:%s ' *)
+          set -euo pipefail
+          shopt -s nullglob
+
+          echo "Digests collected in $DIGEST_DIR:"
+          ls -la "$DIGEST_DIR"
+
+          refs=()
+          for digest_file in "$DIGEST_DIR"/*; do
+            refs+=("$IMAGE_NAME@sha256:$(basename "$digest_file")")
+          done
+          if [ ${#refs[@]} -eq 0 ]; then
+            echo "::error::No per-platform digests were downloaded; nothing to merge"
+            exit 1
+          fi
+
+          mapfile -t tag_args < <(jq -r '.tags[] | "-t", .' <<< "$METADATA")
+          echo "Publishing ${refs[*]} with tags ${tag_args[*]}"
+          docker buildx imagetools create "${tag_args[@]}" "${refs[@]}"
 
       - name: Inspect image
         run: docker buildx imagetools inspect "$IMAGE_NAME:${{ steps.meta.outputs.version }}"
