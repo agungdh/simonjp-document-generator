@@ -52,6 +52,18 @@ class DocumentGenerationTest {
     }
 
     @Test
+    void pdfHasSelectableTextAndPdfBoxMetadata() throws IOException {
+        GeneratedDocument document = generate(DocumentFormat.PDF);
+        try (var pdf = org.apache.pdfbox.Loader.loadPDF(document.content())) {
+            assertEquals("Apache PDFBox", pdf.getDocumentInformation().getProducer());
+            String text = new org.apache.pdfbox.text.PDFTextStripper().getText(pdf);
+            assertTrue(text.contains("Laporan Penjualan 2026"));
+            assertTrue(text.contains("Komposisi Penjualan Q4"));
+            assertTrue(text.contains("Laptop"));
+        }
+    }
+
+    @Test
     void generatesWordWithNativeChart() throws IOException {
         GeneratedDocument document = generate(DocumentFormat.DOCX);
         assertZipMagic(document.content());

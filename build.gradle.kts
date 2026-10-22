@@ -29,11 +29,8 @@ dependencies {
     implementation("org.apache.poi:poi:$poiVersion")
     implementation("org.apache.poi:poi-ooxml:$poiVersion")
 
-    // Charts (rendered to PNG for PDF, native and editable in Word/Excel/PowerPoint)
-    implementation("org.jfree:jfreechart:1.5.5")
-
-    // PDF rendering from XHTML/CSS
-    implementation("org.xhtmlrenderer:flying-saucer-pdf-openpdf:9.4.0")
+    // PDF generation with Apache PDFBox (direct drawing, vector output)
+    implementation("org.apache.pdfbox:pdfbox:3.0.7")
 
     // OpenAPI spec generation (annotations + compile-time processor)
     implementation("io.javalin.community.openapi:javalin-openapi-plugin:$javalinOpenApiVersion")

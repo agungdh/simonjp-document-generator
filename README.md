@@ -5,7 +5,8 @@ JSON. Semua format mendukung teks kaya (font, ukuran, tebal, miring, garis bawah
 grafik.
 
 Dokumen Word/Excel/PowerPoint memakai **grafik native** yang tetap bisa diedit di Office/LibreOffice.
-PDF memakai grafik raster beresolusi tinggi karena formatnya memang statis.
+PDF dibuat dengan **Apache PDFBox** dan digambar langsung sebagai vektor — tidak lewat HTML, tidak mengonversi
+file Office, dan grafiknya bukan gambar raster.
 
 ## Fitur
 
@@ -14,8 +15,8 @@ PDF memakai grafik raster beresolusi tinggi karena formatnya memang statis.
 | Teks kaya (font, ukuran, bold/italic/underline, warna) | ✅ | ✅ | ✅ | ✅ |
 | Tabel dengan header & baris belang | ✅ | ✅ | ✅ | ✅ |
 | Gambar (URL, data URI, base64) | ✅ | ✅ | ✅ | ✅ |
-| Grafik batang / garis / area | ✅ raster | ✅ native | ✅ native | ✅ native |
-| Grafik lingkaran / donat | ✅ raster | ✅ native | ✅ native | ✅ native |
+| Grafik batang / garis / area | ✅ vektor | ✅ native | ✅ native | ✅ native |
+| Grafik lingkaran / donat | ✅ vektor | ✅ native | ✅ native | ✅ native |
 | Page break | ✅ | ✅ | ✅ (jarak baris) | ✅ (slide baru) |
 | Nomor halaman | ✅ | – | – | ✅ |
 | Orientasi & ukuran halaman | ✅ | ✅ | cetak fit-to-width | 16:9 |
@@ -48,6 +49,18 @@ Build distribusi:
 ./gradlew build
 # hasil: build/libs/*.jar dan build/distributions/
 ```
+
+## Library
+
+| Kebutuhan | Library | Versi |
+| --- | --- | --- |
+| Dokumen PDF | Apache PDFBox | 3.0.7 |
+| Word / Excel / PowerPoint | Apache POI | 5.5.1 |
+| HTTP API | Javalin | 7.2.3 |
+| JSON | Jackson | 2.20.1 |
+
+PDFBox dan POI adalah library Apache yang matang dan dipakai luas. PDF digambar langsung dengan operator
+PDFBox (teks, tabel, gambar, grafik vektor), sedangkan file Office memakai format Open XML native POI.
 
 ## API
 
@@ -228,7 +241,7 @@ Tipe grafik yang didukung:
 Nama tipe tidak peka huruf besar/kecil, spasi, `-`, dan `_`. Setiap seri harus memiliki jumlah `values`
 yang sama dengan `categories`. `palette` bersifat opsional; bila kosong dipakai palet bawaan.
 
-`fontFamily` pada `chart` memengaruhi grafik raster PDF. Grafik native Office mengikuti theme/font aplikasi
+`fontFamily` pada `chart` memengaruhi grafik vektor PDF. Grafik native Office mengikuti theme/font aplikasi
 yang membukanya.
 
 ### `pageBreak`
@@ -280,7 +293,7 @@ src/main/java/id/my/agungdh/
     ├── model/                    # record JSON (DocumentRequest, *Block, ChartSpec, TextRun)
     ├── render/                   # Pdf/Docx/Xlsx/PptxDocumentRenderer
     ├── service/                  # DocumentGenerator, DocumentValidator
-    └── support/                  # font, warna, gambar, chart, utilitas XHTML/Office
+    └── support/                  # font PDFBox, warna, gambar, chart vektor, utilitas Office
 src/main/resources/
 ├── fonts/                        # Liberation Sans/Serif/Mono + lisensi
 ├── public/index.html             # playground
@@ -295,12 +308,14 @@ src/test/java/.../DocumentGenerationTest.java
 ```
 
 Tes membuat keempat format dari `sample-document.json` ke `build/test-documents/` dan memeriksa isi paket
-Office (chart native, gambar, tabel). Untuk pemeriksaan visual:
+Office (chart native, gambar, tabel). Untuk pemeriksaan visual PDF:
 
 ```bash
-soffice --headless --convert-to pdf build/test-documents/laporan-penjualan-2026.docx
-pdftoppm -png laporan-penjualan-2026.pdf halaman
+pdftoppm -png build/test-documents/laporan-penjualan-2026.pdf halaman
 ```
+
+File Word/Excel/PowerPoint dapat langsung dibuka di aplikasi Office atau LibreOffice; tidak ada proses
+konversi di aplikasi ini.
 
 ## Lisensi font
 

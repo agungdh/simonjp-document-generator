@@ -33,7 +33,7 @@ public final class Styles {
         return Math.max(4.0, Math.min(200.0, size));
     }
 
-    /** Maps a requested family to one of the three fonts bundled with the PDF renderer. */
+    /** Maps a requested family to a PDF base family. */
     public static String pdfFont(String family) {
         String f = family == null ? "" : family.toLowerCase();
         if (f.contains("courier") || f.contains("mono") || f.contains("consol") || f.contains("code")) {
@@ -45,20 +45,6 @@ public final class Styles {
             return "Liberation Serif";
         }
         return "Liberation Sans";
-    }
-
-    /** Java2D logical font used while rasterizing charts. */
-    public static String awtFont(String family) {
-        String f = family == null ? "" : family.toLowerCase();
-        if (f.contains("courier") || f.contains("mono") || f.contains("consol") || f.contains("code")) {
-            return java.awt.Font.MONOSPACED;
-        }
-        if (f.contains("times") || f.contains("serif") || f.contains("georgia")
-                || f.contains("cambria") || f.contains("garamond") || f.contains("book")
-                || f.contains("roman")) {
-            return java.awt.Font.SERIF;
-        }
-        return java.awt.Font.SANS_SERIF;
     }
 
     public static String headingFont(int level) {

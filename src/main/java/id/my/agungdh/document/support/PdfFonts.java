@@ -1,78 +1,83 @@
 package id.my.agungdh.document.support;
 
-import com.lowagie.text.pdf.BaseFont;
-import org.xhtmlrenderer.pdf.ITextFontResolver;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.font.PDFont;
+import org.apache.pdfbox.pdmodel.font.PDType0Font;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
-import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Liberation fonts are metric-compatible with Arial, Times New Roman and
- * Courier New, and are bundled so PDF output looks the same everywhere.
+ * Loads the bundled Liberation fonts into a PDFBox document. The three families
+ * are metric-compatible with Arial, Times New Roman and Courier New, so PDF
+ * output is consistent and does not depend on system fonts.
  */
 public final class PdfFonts {
 
-    private static final List<String> STYLES = List.of("Regular", "Bold", "Italic", "BoldItalic");
-    private static final Map<String, String> FILES = Map.of(
+    private static final Map<String, String> FILE_BASES = Map.of(
             "Liberation Sans", "LiberationSans",
             "Liberation Serif", "LiberationSerif",
             "Liberation Mono", "LiberationMono"
     );
 
-    private static volatile Path directory;
+    private final PDDocument document;
+    private final Map<Face, PDType0Font> cache = new HashMap<>();
 
-    private PdfFonts() {
+    public PdfFonts(PDDocument document) {
+        this.document = document;
     }
 
-    public static synchronized Path directory() {
-        if (directory != null) {
-            return directory;
-        }
-        try {
-            Path dir = Files.createTempDirectory("simonjp-pdf-fonts-");
-            for (String fileBase : FILES.values()) {
-                for (String style : STYLES) {
-                    String name = fileBase + "-" + style + ".ttf";
-                    try (InputStream in = PdfFonts.class.getResourceAsStream("/fonts/" + name)) {
-                        if (in == null) {
-                            throw new IllegalStateException("Bundled font is missing: " + name);
-                        }
-                        Path target = dir.resolve(name);
-                        Files.copy(in, target, StandardCopyOption.REPLACE_EXISTING);
-                        target.toFile().deleteOnExit();
-                    }
-                }
+    private record Face(String base, boolean bold, boolean italic) {
+    }
+
+    /**
+     * Resolves a requested family to one of the bundled fonts and loads the
+     * matching regular/bold/italic/bold-italic face.
+     */
+    public PDType0Font font(String family, boolean bold, boolean italic) {
+        String base = FILE_BASES.get(Styles.pdfFont(family));
+        Face face = new Face(base, bold, italic);
+        return cache.computeIfAbsent(face, key -> load(key));
+    }
+
+    private PDType0Font load(Face face) {
+        String style = face.bold()
+                ? (face.italic() ? "BoldItalic" : "Bold")
+                : (face.italic() ? "Italic" : "Regular");
+        String resource = "/fonts/" + face.base() + "-" + style + ".ttf";
+        try (InputStream in = PdfFonts.class.getResourceAsStream(resource)) {
+            if (in == null) {
+                throw new IllegalStateException("Bundled font is missing: " + resource);
             }
-            dir.toFile().deleteOnExit();
-            directory = dir;
-            return dir;
+            return PDType0Font.load(document, in, true);
         } catch (IOException e) {
-            throw new IllegalStateException("Could not unpack bundled PDF fonts", e);
+            throw new IllegalStateException("Could not load bundled font " + resource, e);
         }
     }
 
-    public static void register(ITextFontResolver resolver) {
-        Path dir = directory();
+    public float width(PDFont font, double size, String text) {
+        if (text == null || text.isEmpty()) {
+            return 0;
+        }
         try {
-            for (Map.Entry<String, String> entry : FILES.entrySet()) {
-                String family = entry.getKey();
-                String fileBase = entry.getValue();
-                for (String style : STYLES) {
-                    Path font = dir.resolve(fileBase + "-" + style + ".ttf");
-                    resolver.addFont(font.toString(), family, BaseFont.IDENTITY_H, true, null);
-                }
-            }
-        } catch (Exception e) {
-            throw new IllegalStateException("Could not register bundled PDF fonts", e);
+            return font.getStringWidth(text) * (float) size / 1000f;
+        } catch (IOException e) {
+            throw new IllegalStateException("Could not measure text", e);
         }
     }
 
-    public static Path regularSans() {
-        return directory().resolve("LiberationSans-Regular.ttf");
+    public float ascent(PDFont font, double size) {
+        float ascent = font.getFontDescriptor() == null ? 800 : font.getFontDescriptor().getAscent();
+        return (ascent <= 0 ? 800 : ascent) * (float) size / 1000f;
+    }
+
+    public float descent(PDFont font, double size) {
+        float descent = font.getFontDescriptor() == null ? -200 : font.getFontDescriptor().getDescent();
+        if (descent >= 0) {
+            descent = -200;
+        }
+        return -descent * (float) size / 1000f;
     }
 }
