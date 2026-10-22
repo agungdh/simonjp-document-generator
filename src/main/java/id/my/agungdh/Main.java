@@ -1,17 +1,36 @@
 package id.my.agungdh;
 
-//TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
-// click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
-public class Main {
-    static void main() {
-        //TIP Press <shortcut actionId="ShowIntentionActions"/> with your caret at the highlighted text
-        // to see how IntelliJ IDEA suggests fixing it.
-        IO.println(String.format("Hello and welcome!"));
+import id.my.agungdh.controller.HelloController;
+import io.javalin.Javalin;
+import io.javalin.openapi.plugin.OpenApiPlugin;
+import io.javalin.openapi.plugin.swagger.SwaggerPlugin;
 
-        for (int i = 1; i <= 5; i++) {
-            //TIP Press <shortcut actionId="Debug"/> to start debugging your code. We have set one <icon src="AllIcons.Debugger.Db_set_breakpoint"/> breakpoint
-            // for you, but you can always add more by pressing <shortcut actionId="ToggleLineBreakpoint"/>.
-            IO.println("i = " + i);
-        }
+public class Main {
+
+    private static final int PORT = 7000;
+
+    public static void main(String[] args) {
+        Javalin app = Javalin.create(config -> {
+            config.registerPlugin(new OpenApiPlugin(openApi -> openApi
+                    .withDocumentationPath("/openapi")
+                    .withPrettyOutput()
+                    .withDefinitionConfiguration((version, definition) -> definition
+                            .withInfo(info -> info
+                                    .title("SimonJP Document Generator API")
+                                    .version("1.0.0")
+                                    .description("REST API for generating documents.")))));
+
+            config.registerPlugin(new SwaggerPlugin(swagger -> {
+                swagger.setDocumentationPath("/openapi");
+                swagger.setUiPath("/swagger");
+                swagger.setTitle("SimonJP Document Generator API");
+            }));
+        });
+
+        new HelloController().register(app);
+
+        app.get("/", ctx -> ctx.redirect("/swagger"));
+
+        app.start(PORT);
     }
 }
