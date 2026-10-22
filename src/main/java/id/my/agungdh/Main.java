@@ -7,7 +7,7 @@ import io.javalin.openapi.plugin.swagger.SwaggerPlugin;
 
 public class Main {
 
-    private static final int PORT = 7000;
+    private static final int DEFAULT_PORT = 7000;
 
     public static void main(String[] args) {
         Javalin app = Javalin.create(config -> {
@@ -29,6 +29,31 @@ public class Main {
             new HelloController().register(config.routes);
         });
 
-        app.start(PORT);
+        app.start(resolvePort(args));
+    }
+
+    private static int resolvePort(String[] args) {
+        if (args.length > 0) {
+            return parsePort(args[0]);
+        }
+
+        String env = System.getenv("PORT");
+        if (env != null && !env.isBlank()) {
+            return parsePort(env);
+        }
+
+        return DEFAULT_PORT;
+    }
+
+    private static int parsePort(String value) {
+        try {
+            int port = Integer.parseInt(value.trim());
+            if (port < 0 || port > 65535) {
+                throw new IllegalArgumentException("Port must be between 0 and 65535, got: " + value);
+            }
+            return port;
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Invalid port: " + value, e);
+        }
     }
 }
