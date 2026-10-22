@@ -60,9 +60,6 @@ jobs:
       - name: Set image name
         run: echo "IMAGE_NAME=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
 
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
       - name: Set up Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -91,6 +88,9 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
+          # No QEMU/binfmt is needed for the arm64 half of this manifest: the
+          # Dockerfile has no RUN step, so nothing foreign-arch is executed.
+          # Add setup-qemu back if a RUN instruction is ever introduced.
           platforms: linux/amd64,linux/arm64
           # Pull requests only verify that the image builds; pushes publish it.
           push: ${{ github.event_name != 'pull_request' }}
