@@ -14,22 +14,20 @@ public class Main {
             config.registerPlugin(new OpenApiPlugin(openApi -> openApi
                     .withDocumentationPath("/openapi")
                     .withPrettyOutput()
-                    .withDefinitionConfiguration((version, definition) -> definition
-                            .withInfo(info -> info
+                    .withDefinitionConfiguration((version, schema) -> schema
+                            .info(info -> info
                                     .title("SimonJP Document Generator API")
                                     .version("1.0.0")
                                     .description("REST API for generating documents.")))));
 
-            config.registerPlugin(new SwaggerPlugin(swagger -> {
-                swagger.setDocumentationPath("/openapi");
-                swagger.setUiPath("/swagger");
-                swagger.setTitle("SimonJP Document Generator API");
-            }));
+            config.registerPlugin(new SwaggerPlugin(swagger -> swagger
+                    .withDocumentationPath("/openapi")
+                    .withUiPath("/swagger")
+                    .withTitle("SimonJP Document Generator API")));
+
+            config.routes.get("/", ctx -> ctx.redirect("/swagger"));
+            new HelloController().register(config.routes);
         });
-
-        new HelloController().register(app);
-
-        app.get("/", ctx -> ctx.redirect("/swagger"));
 
         app.start(PORT);
     }

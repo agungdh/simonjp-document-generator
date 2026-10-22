@@ -1,13 +1,13 @@
 package id.my.agungdh.controller;
 
 import id.my.agungdh.dto.GreetingResponse;
-import io.javalin.Javalin;
 import io.javalin.http.Context;
 import io.javalin.openapi.HttpMethod;
 import io.javalin.openapi.OpenApi;
 import io.javalin.openapi.OpenApiContent;
 import io.javalin.openapi.OpenApiParam;
 import io.javalin.openapi.OpenApiResponse;
+import io.javalin.router.JavalinDefaultRoutingApi;
 
 public class HelloController {
 
@@ -37,7 +37,7 @@ public class HelloController {
         ctx.json(new GreetingResponse("Hello, " + name + "!"));
     }
 
-    public void register(Javalin app) {
-        app.get("/api/hello", this::hello);
+    public void register(JavalinDefaultRoutingApi routes) {
+        routes.get("/api/hello", this::hello);
     }
 }

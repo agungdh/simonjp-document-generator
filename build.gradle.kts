@@ -16,8 +16,8 @@ repositories {
     mavenCentral()
 }
 
-val javalinVersion = "6.7.0"
-val javalinOpenApiVersion = "6.7.0-1"
+val javalinVersion = "7.2.3"
+val javalinOpenApiVersion = "7.2.3"
 
 dependencies {
     implementation("io.javalin:javalin:$javalinVersion")
@@ -30,7 +30,7 @@ dependencies {
     implementation("io.javalin.community.openapi:javalin-swagger-plugin:$javalinOpenApiVersion")
 
     // Logging backend required by Javalin
-    implementation("org.slf4j:slf4j-simple:2.0.17")
+    implementation("org.slf4j:slf4j-simple:2.0.18")
 
     testImplementation(platform("org.junit:junit-bom:6.0.0"))
     testImplementation("org.junit.jupiter:junit-jupiter")
