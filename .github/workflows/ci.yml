@@ -71,10 +71,9 @@ jobs:
             runner: ubuntu-26.04
           - arch: arm64
             platform: linux/arm64
-            # Native arm64 runner is only available on public repos / paid plans.
-            # The Dockerfile has no RUN step, so cross-building it on x64 works
-            # without QEMU; switch to ubuntu-26.04-arm if the plan allows it.
-            runner: ubuntu-26.04
+            # Native arm64 runner: no emulation at all. Requires a plan that
+            # provides arm64 hosted runners (public repos or paid plans).
+            runner: ubuntu-26.04-arm
 
     steps:
       - name: Checkout
