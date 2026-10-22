@@ -33,7 +33,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v6
 
       - name: Build and test
-        run: ./gradlew build --stacktrace
+        run: ./gradlew build shadowJar --stacktrace
 
       - name: Upload test reports
         if: failure()
@@ -44,10 +44,10 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
 
-      - name: Upload application jar
+      - name: Upload runnable jar
         uses: actions/upload-artifact@v7
         with:
           name: app-jar
-          path: build/libs/*.jar
+          path: build/libs/*-all.jar
           if-no-files-found: error
           retention-days: 7
