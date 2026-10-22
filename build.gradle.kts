@@ -1,6 +1,7 @@
 plugins {
     id("java")
     application
+    id("com.gradleup.shadow") version "9.6.1"
 }
 
 group = "id.my.agungdh"
@@ -55,4 +56,15 @@ application {
 
 tasks.test {
     useJUnitPlatform()
+}
+
+tasks.shadowJar {
+    // Multiple dependencies ship the same META-INF/services/* descriptors
+    // (Jetty, POI, Jackson); they must be concatenated, not overwritten.
+    mergeServiceFiles()
+    // Shadow's default duplicatesStrategy is EXCLUDE, which would drop the
+    // duplicate descriptors before the transformer above can merge them.
+    filesMatching("META-INF/services/**") {
+        duplicatesStrategy = DuplicatesStrategy.INCLUDE
+    }
 }
