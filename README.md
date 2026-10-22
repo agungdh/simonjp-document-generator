@@ -50,6 +50,23 @@ Build distribusi:
 # hasil: build/libs/*.jar dan build/distributions/
 ```
 
+## Docker
+
+Image runtime memakai distroless Debian 13 + Java 25 (nonroot, tanpa shell):
+
+```bash
+./gradlew shadowJar
+docker build -t simonjp-document-generator:latest .
+docker run --rm -p 7000:7000 -e PORT=7000 simonjp-document-generator:latest
+```
+
+Image juga dipublikasikan otomatis oleh workflow `Docker` ke GHCR untuk setiap push ke `master`
+dan tag `v*`:
+
+```bash
+docker run --rm -p 7000:7000 ghcr.io/agungdh/simonjp-document-generator:latest
+```
+
 ## Library
 
 | Kebutuhan | Library | Versi |
