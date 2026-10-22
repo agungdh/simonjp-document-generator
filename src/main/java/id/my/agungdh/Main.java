@@ -1,9 +1,13 @@
 package id.my.agungdh;
 
+import id.my.agungdh.controller.DocumentController;
 import id.my.agungdh.controller.HelloController;
 import io.javalin.Javalin;
+import io.javalin.http.staticfiles.Location;
 import io.javalin.openapi.plugin.OpenApiPlugin;
 import io.javalin.openapi.plugin.swagger.SwaggerPlugin;
+
+import java.util.Map;
 
 public class Main {
 
@@ -11,6 +15,14 @@ public class Main {
 
     public static void main(String[] args) {
         Javalin app = Javalin.create(config -> {
+            config.http.maxRequestSize = 25L * 1024 * 1024;
+
+            config.staticFiles.add(staticFiles -> {
+                staticFiles.hostedPath = "/";
+                staticFiles.directory = "/public";
+                staticFiles.location = Location.CLASSPATH;
+            });
+
             config.registerPlugin(new OpenApiPlugin(openApi -> openApi
                     .withDocumentationPath("/openapi")
                     .withPrettyOutput()
@@ -18,15 +30,23 @@ public class Main {
                             .info(info -> info
                                     .title("SimonJP Document Generator API")
                                     .version("1.0.0")
-                                    .description("REST API for generating documents.")))));
+                                    .description("REST API for generating PDF, Word, Excel and PowerPoint documents.")))));
 
             config.registerPlugin(new SwaggerPlugin(swagger -> swagger
                     .withDocumentationPath("/openapi")
                     .withUiPath("/swagger")
                     .withTitle("SimonJP Document Generator API")));
 
-            config.routes.get("/", ctx -> ctx.redirect("/swagger"));
             new HelloController().register(config.routes);
+            new DocumentController().register(config.routes);
+
+            config.routes.exception(IllegalArgumentException.class, (error, ctx) ->
+                    ctx.status(400).json(Map.of("error", error.getMessage() == null
+                            ? "Invalid request" : error.getMessage())));
+            config.routes.exception(Exception.class, (error, ctx) -> {
+                error.printStackTrace();
+                ctx.status(500).json(Map.of("error", "Could not generate the document"));
+            });
         });
 
         app.start(resolvePort(args));

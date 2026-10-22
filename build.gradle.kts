@@ -18,9 +18,21 @@ repositories {
 
 val javalinVersion = "7.2.3"
 val javalinOpenApiVersion = "7.2.3"
+val poiVersion = "5.5.1"
 
 dependencies {
     implementation("io.javalin:javalin:$javalinVersion")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.20.1")
+
+    // Office documents (Word, Excel, PowerPoint)
+    implementation("org.apache.poi:poi:$poiVersion")
+    implementation("org.apache.poi:poi-ooxml:$poiVersion")
+
+    // Charts (rendered to PNG for PDF, native and editable in Word/Excel/PowerPoint)
+    implementation("org.jfree:jfreechart:1.5.5")
+
+    // PDF rendering from XHTML/CSS
+    implementation("org.xhtmlrenderer:flying-saucer-pdf-openpdf:9.4.0")
 
     // OpenAPI spec generation (annotations + compile-time processor)
     implementation("io.javalin.community.openapi:javalin-openapi-plugin:$javalinOpenApiVersion")

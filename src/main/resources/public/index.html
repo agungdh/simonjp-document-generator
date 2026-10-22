@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>SimonJP Document Generator</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231F4E79'/%3E%3Cpath d='M9 23V9h6.2c3.1 0 5 1.7 5 4.4 0 1.8-1 3.1-2.6 3.8L21 23h-3.6l-2.6-5.1H12V23H9Zm3-7.7h3c1.4 0 2.2-.7 2.2-1.8 0-1.2-.8-1.8-2.2-1.8h-3v3.6Z' fill='%23fff'/%3E%3C/svg%3E"/>
+<style>
+  :root {
+    --primary: #1F4E79;
+    --primary-dark: #163a5a;
+    --accent: #2E75B6;
+    --green: #70AD47;
+    --orange: #ED7D31;
+    --bg: #F4F7FA;
+    --surface: #FFFFFF;
+    --text: #222222;
+    --muted: #667085;
+    --border: #D7DEE6;
+    --danger: #B42318;
+    --radius: 12px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Segoe UI", "Liberation Sans", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+  }
+  header {
+    background: linear-gradient(120deg, var(--primary) 0%, var(--accent) 100%);
+    color: #fff;
+    padding: 26px 0;
+  }
+  .wrap { width: min(1180px, calc(100% - 36px)); margin: 0 auto; }
+  header .wrap { display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
+  .brand { display: flex; align-items: center; gap: 14px; }
+  .brand-mark {
+    width: 46px; height: 46px; border-radius: 12px;
+    background: rgba(255,255,255,.15);
+    border: 1px solid rgba(255,255,255,.35);
+    display: grid; place-items: center;
+    font-weight: 800; font-size: 20px; letter-spacing: -.5px;
+  }
+  header h1 { margin: 0; font-size: 24px; letter-spacing: -.2px; }
+  header p { margin: 2px 0 0; font-size: 13px; color: rgba(255,255,255,.82); }
+  header nav { display: flex; gap: 10px; }
+  header nav a {
+    color: #fff; text-decoration: none; font-size: 13px; font-weight: 600;
+    padding: 8px 14px; border-radius: 999px;
+    background: rgba(255,255,255,.14);
+    border: 1px solid rgba(255,255,255,.28);
+  }
+  header nav a:hover { background: rgba(255,255,255,.24); }
+  main { padding: 26px 0 48px; }
+  .intro { margin-bottom: 18px; }
+  .intro h2 { margin: 0 0 6px; font-size: 20px; color: var(--primary); }
+  .intro p { margin: 0; color: var(--muted); font-size: 14px; max-width: 900px; }
+  .layout { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 20px; align-items: start; }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: 0 1px 2px rgba(16,24,40,.04);
+  }
+  .card-head {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 14px 18px; border-bottom: 1px solid var(--border);
+  }
+  .card-head h3 { margin: 0; font-size: 14px; color: var(--primary); }
+  .card-head .hint { font-size: 12px; color: var(--muted); }
+  .card-body { padding: 16px 18px; }
+  #json {
+    width: 100%; min-height: 560px; resize: vertical;
+    border: 1px solid var(--border); border-radius: 8px;
+    padding: 12px 14px;
+    font-family: "Liberation Mono", "Cascadia Mono", Consolas, monospace;
+    font-size: 12.5px; line-height: 1.55;
+    color: #1F2937; background: #FBFCFE;
+    tab-size: 2;
+  }
+  #json:focus { outline: 2px solid rgba(46,117,182,.35); border-color: var(--accent); }
+  .toolbar { display: flex; flex-wrap: wrap; gap: 8px; }
+  .btn {
+    appearance: none; border: 1px solid var(--border); background: #fff;
+    color: var(--primary); font: inherit; font-size: 13px; font-weight: 600;
+    padding: 8px 13px; border-radius: 8px; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 7px;
+    transition: background .15s, border-color .15s, transform .05s;
+  }
+  .btn:hover { background: #F2F6FA; border-color: #B9C6D4; }
+  .btn:active { transform: translateY(1px); }
+  .btn.primary { background: var(--primary); border-color: var(--primary); color: #fff; }
+  .btn.primary:hover { background: var(--primary-dark); }
+  .btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+  .formats { display: grid; gap: 10px; }
+  .format-btn {
+    display: flex; align-items: center; gap: 12px; width: 100%;
+    padding: 12px 14px; border-radius: 10px; cursor: pointer;
+    border: 1px solid var(--border); background: #fff; text-align: left;
+    font: inherit; transition: border-color .15s, box-shadow .15s, background .15s;
+  }
+  .format-btn:hover { border-color: var(--accent); background: #F7FAFD; box-shadow: 0 2px 8px rgba(31,78,121,.08); }
+  .format-btn:disabled { opacity: .55; cursor: not-allowed; box-shadow: none; }
+  .format-btn .icon {
+    flex: 0 0 auto; width: 40px; height: 40px; border-radius: 9px;
+    display: grid; place-items: center; font-size: 12px; font-weight: 800; color: #fff;
+  }
+  .format-btn .label { display: block; font-weight: 700; font-size: 14px; color: var(--text); }
+  .format-btn .sub { display: block; font-size: 12px; color: var(--muted); }
+  .ico-pdf { background: #C0392B; }
+  .ico-docx { background: #2E75B6; }
+  .ico-xlsx { background: #217346; }
+  .ico-pptx { background: #D35400; }
+  .status { margin-top: 14px; font-size: 13px; border-radius: 8px; padding: 10px 12px; display: none; }
+  .status.show { display: block; }
+  .status.info { background: #EAF2FB; color: var(--primary); }
+  .status.error { background: #FDECEA; color: var(--danger); }
+  .status.success { background: #EAF5E8; color: #2F6B22; }
+  .meta { display: grid; gap: 10px; margin-top: 14px; }
+  .meta div { display: flex; justify-content: space-between; gap: 12px; font-size: 12.5px; }
+  .meta dt { color: var(--muted); }
+  .meta dd { margin: 0; font-weight: 600; text-align: right; }
+  .schema { margin-top: 16px; border-top: 1px dashed var(--border); padding-top: 14px; }
+  .schema h4 { margin: 0 0 8px; font-size: 12px; text-transform: uppercase; letter-spacing: .6px; color: var(--muted); }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { font-size: 11.5px; padding: 3px 9px; border-radius: 999px; background: #EEF3F8; color: #35506B; border: 1px solid #DCE6F0; }
+  footer { padding: 18px 0 30px; color: var(--muted); font-size: 12.5px; }
+  footer .wrap { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  code { font-family: "Liberation Mono", Consolas, monospace; font-size: 12px; background: #EEF3F8; padding: 1px 5px; border-radius: 4px; }
+  @media (max-width: 960px) {
+    .layout { grid-template-columns: 1fr; }
+    #json { min-height: 380px; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="brand">
+      <div class="brand-mark">SJ</div>
+      <div>
+        <h1>SimonJP Document Generator</h1>
+        <p>PDF &middot; Word &middot; Excel &middot; PowerPoint dari satu model JSON</p>
+      </div>
+    </div>
+    <nav>
+      <a href="/swagger" target="_blank" rel="noopener">Swagger UI</a>
+      <a href="/openapi" target="_blank" rel="noopener">OpenAPI</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="intro">
+    <h2>Playground</h2>
+    <p>Sunting JSON di bawah, lalu pilih format. Teks mendukung font, ukuran, tebal, miring, garis bawah dan warna
+      per bagian; dokumen juga mendukung tabel, gambar (URL atau data URI) serta grafik batang, garis, area, dan lingkaran.</p>
+  </section>
+
+  <div class="layout">
+    <section class="card">
+      <div class="card-head">
+        <h3>Document JSON</h3>
+        <div class="toolbar">
+          <button class="btn" id="sample" type="button">Muat contoh</button>
+          <button class="btn" id="copy" type="button">Salin</button>
+          <button class="btn" id="format" type="button">Rapikan</button>
+        </div>
+      </div>
+      <div class="card-body">
+        <textarea id="json" spellcheck="false" aria-label="Document JSON"></textarea>
+      </div>
+    </section>
+
+    <aside class="card">
+      <div class="card-head"><h3>Unduh dokumen</h3><span class="hint">POST /api/documents</span></div>
+      <div class="card-body">
+        <div class="formats">
+          <button class="format-btn" data-format="pdf" type="button">
+            <span class="icon ico-pdf">PDF</span>
+            <span><span class="label">PDF</span><span class="sub">Siap cetak, grafik raster</span></span>
+          </button>
+          <button class="format-btn" data-format="docx" type="button">
+            <span class="icon ico-docx">W</span>
+            <span><span class="label">Word (.docx)</span><span class="sub">Grafik native, dapat diedit</span></span>
+          </button>
+          <button class="format-btn" data-format="xlsx" type="button">
+            <span class="icon ico-xlsx">X</span>
+            <span><span class="label">Excel (.xlsx)</span><span class="sub">Grid laporan, grafik native</span></span>
+          </button>
+          <button class="format-btn" data-format="pptx" type="button">
+            <span class="icon ico-pptx">P</span>
+            <span><span class="label">PowerPoint (.pptx)</span><span class="sub">Slide 16:9, grafik native</span></span>
+          </button>
+        </div>
+
+        <div class="status" id="status" role="status" aria-live="polite"></div>
+
+        <dl class="meta">
+          <div><dt>Ukuran halaman</dt><dd id="m-page">A4</dd></div>
+          <div><dt>Jumlah blok</dt><dd id="m-blocks">&ndash;</dd></div>
+          <div><dt>Grafik</dt><dd id="m-charts">&ndash;</dd></div>
+        </dl>
+
+        <div class="schema">
+          <h4>Tipe blok</h4>
+          <div class="chips">
+            <span class="chip">heading</span>
+            <span class="chip">paragraph</span>
+            <span class="chip">table</span>
+            <span class="chip">image</span>
+            <span class="chip">chart</span>
+            <span class="chip">pageBreak</span>
+          </div>
+          <h4 style="margin-top:14px">Tipe grafik</h4>
+          <div class="chips">
+            <span class="chip">bar</span>
+            <span class="chip">horizontalBar</span>
+            <span class="chip">stackedBar</span>
+            <span class="chip">line</span>
+            <span class="chip">area</span>
+            <span class="chip">stackedArea</span>
+            <span class="chip">pie</span>
+            <span class="chip">doughnut</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>Contoh data bersifat fiktif. Maksimum 25 MB per permintaan.</span>
+    <span>Endpoint: <code>POST /api/documents/{pdf|docx|xlsx|pptx}</code></span>
+  </div>
+</footer>
+
+<script>
+(() => {
+  const editor = document.getElementById("json");
+  const status = document.getElementById("status");
+  const formatButtons = [...document.querySelectorAll(".format-btn")];
+  const mPage = document.getElementById("m-page");
+  const mBlocks = document.getElementById("m-blocks");
+  const mCharts = document.getElementById("m-charts");
+
+  const showStatus = (message, kind = "info") => {
+    status.textContent = message;
+    status.className = "status show " + kind;
+  };
+
+  const setBusy = (busy, format) => {
+    formatButtons.forEach(button => {
+      button.disabled = busy;
+      if (busy && button.dataset.format === format) {
+        button.dataset.original = button.querySelector(".sub").textContent;
+        button.querySelector(".sub").textContent = "Membuat dokumen\u2026";
+      } else if (!busy && button.dataset.original) {
+        button.querySelector(".sub").textContent = button.dataset.original;
+        delete button.dataset.original;
+      }
+    });
+  };
+
+  const parse = () => {
+    try {
+      return JSON.parse(editor.value);
+    } catch (error) {
+      throw new Error("JSON tidak valid: " + error.message);
+    }
+  };
+
+  const refreshMeta = () => {
+    try {
+      const doc = parse();
+      const blocks = Array.isArray(doc.blocks) ? doc.blocks : [];
+      const charts = blocks.filter(block => block && block.type === "chart").length;
+      const page = (doc.pageSize || "A4").toUpperCase();
+      const orientation = doc.orientation === "landscape" ? "landscape" : "portrait";
+      mPage.textContent = page + " \u00b7 " + orientation;
+      mBlocks.textContent = blocks.length;
+      mCharts.textContent = charts;
+    } catch {
+      mPage.textContent = "\u2013";
+      mBlocks.textContent = "\u2013";
+      mCharts.textContent = "\u2013";
+    }
+  };
+
+  const filename = (response, format) => {
+    const header = response.headers.get("Content-Disposition") || "";
+    const match = /filename="?([^";]+)"?/i.exec(header);
+    if (match) {
+      return match[1];
+    }
+    return "dokumen." + format;
+  };
+
+  const download = async format => {
+    let payload;
+    try {
+      payload = parse();
+    } catch (error) {
+      showStatus(error.message, "error");
+      return;
+    }
+    setBusy(true, format);
+    showStatus("Membuat " + format.toUpperCase() + "\u2026", "info");
+    try {
+      const response = await fetch("/api/documents/" + format, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      if (!response.ok) {
+        let message = "Gagal membuat dokumen (" + response.status + ")";
+        try {
+          const body = await response.json();
+          if (body && body.error) {
+            message = body.error;
+          }
+        } catch { /* ignore non-JSON errors */ }
+        throw new Error(message);
+      }
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = filename(response, format);
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1500);
+      showStatus("Dokumen " + format.toUpperCase() + " berhasil dibuat dan diunduh.", "success");
+    } catch (error) {
+      showStatus(error.message || "Terjadi kesalahan saat menghubungi server.", "error");
+    } finally {
+      setBusy(false, format);
+    }
+  };
+
+  formatButtons.forEach(button => {
+    button.addEventListener("click", () => download(button.dataset.format));
+  });
+
+  document.getElementById("sample").addEventListener("click", async () => {
+    try {
+      const response = await fetch("/api/documents/sample");
+      if (!response.ok) {
+        throw new Error("Contoh tidak tersedia (" + response.status + ")");
+      }
+      editor.value = JSON.stringify(await response.json(), null, 2);
+      refreshMeta();
+      showStatus("Contoh dokumen dimuat.", "info");
+    } catch (error) {
+      showStatus(error.message, "error");
+    }
+  });
+
+  document.getElementById("copy").addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText(editor.value);
+      showStatus("JSON disalin ke clipboard.", "info");
+    } catch {
+      showStatus("Clipboard tidak tersedia; salin manual dari editor.", "error");
+    }
+  });
+
+  document.getElementById("format").addEventListener("click", () => {
+    try {
+      editor.value = JSON.stringify(parse(), null, 2);
+      refreshMeta();
+      showStatus("JSON dirapikan.", "info");
+    } catch (error) {
+      showStatus(error.message, "error");
+    }
+  });
+
+  editor.addEventListener("input", refreshMeta);
+
+  fetch("/api/documents/sample")
+    .then(response => response.ok ? response.json() : null)
+    .then(sample => {
+      if (sample) {
+        editor.value = JSON.stringify(sample, null, 2);
+      }
+    })
+    .catch(() => { /* editor stays empty; the sample button can retry */ })
+    .finally(refreshMeta);
+})();
+</script>
+</body>
+</html>
