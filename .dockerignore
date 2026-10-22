@@ -1,0 +1,13 @@
+.git
+.gitignore
+.gradle
+.idea
+README.md
+Dockerfile
+.dockerignore
+
+# Only the shadow jar is copied into the image.
+build
+!build/libs
+build/libs/*
+!build/libs/*-all.jar
