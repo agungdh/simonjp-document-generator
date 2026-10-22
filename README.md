@@ -60,8 +60,8 @@ docker build -t simonjp-document-generator:latest .
 docker run --rm -p 7000:7000 -e PORT=7000 simonjp-document-generator:latest
 ```
 
-Image juga dipublikasikan otomatis oleh workflow `Docker` ke GHCR untuk setiap push ke `master`
-dan tag `v*`:
+Image juga dipublikasikan otomatis oleh workflow `CI` ke GHCR untuk setiap push ke `master`
+dan tag `v*` (satu workflow: build + test jar, lalu jar di-`COPY` ke image):
 
 ```bash
 docker run --rm -p 7000:7000 ghcr.io/agungdh/simonjp-document-generator:latest
